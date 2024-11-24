@@ -1,0 +1,21 @@
+name: ExplodingPlayers
+version: '1.0.0'
+main: me.honeyberries.explodingPlayers.ExplodingPlayers
+api-version: '1.13'
+authors: [ HoneyBerries ]
+
+commands:
+  explodingPlayers:
+    description: "Allows you to modify the list of players who would explode!"
+    usage: "/explodingPlayers [add/remove/list] [player]"
+    aliases: [ exp ]
+    permission: explodingPlayers.command.edit
+    permission-message: "You do not have the permission to view or edit the players that will explode!"
+
+permissions:
+  explodingPlayers.command.edit:
+    description: "This permission allows users to view and edit the players that will explode!"
+    default: op
+  explodingPlayers.explode.use:
+    description: "This permission allows users to make players EXPLODE!"
+    default: op
