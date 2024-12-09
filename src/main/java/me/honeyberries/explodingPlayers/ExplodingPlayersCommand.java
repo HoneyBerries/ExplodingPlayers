@@ -7,6 +7,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,143 +15,110 @@ import java.util.UUID;
 
 public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
 
-
-
-    public OfflinePlayer getOnlineOfflinePlayer(String identifier) {
-
-        // Check if the input is a valid UUID
+    // Get online player by UUID or username
+    public Player getOnlinePlayer(String identifier) {
         try {
             UUID uuid = UUID.fromString(identifier);
-
-            // First, check if the player is online using UUID
-            Player onlinePlayer = Bukkit.getPlayer(uuid);
-            if (onlinePlayer != null) {
-                return onlinePlayer; // Return online Player object
-            }
-
-            // If the player is offline, get the OfflinePlayer by UUID
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-            if (offlinePlayer.hasPlayedBefore()) {
-                return offlinePlayer; // This will return null if the player is offline
-            }
-
+            return Bukkit.getPlayer(uuid); // Returns null if player is offline
         } catch (IllegalArgumentException e) {
-            // If the input is not a valid UUID, treat it as a username
-            Player onlinePlayer = Bukkit.getPlayer(identifier);
-            if (onlinePlayer != null) {
-                return onlinePlayer; // Return online Player object
-            }
-
-            // If the player is not online, get the OfflinePlayer by identifier
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(identifier);
-            if (offlinePlayer.hasPlayedBefore()) {
-                return offlinePlayer; // This will return null if the player is offline
-            }
+            return Bukkit.getPlayer(identifier); // Fallback to name lookup
         }
-
-        // If the player does not exist or has never joined, return null
-        return null;
     }
 
+    // Get offline player by UUID or username
+    public OfflinePlayer getOfflinePlayer(String identifier) {
+        try {
+            UUID uuid = UUID.fromString(identifier);
+            return Bukkit.getOfflinePlayer(uuid);
+        } catch (IllegalArgumentException e) {
+            return Bukkit.getOfflinePlayer(identifier);
+        }
+    }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-
-        // ran /explodingPlayers add|remove HoneyBerries
+        // Ensure the sender provided enough arguments
         if (args.length == 2) {
-
-            if (args[0].equalsIgnoreCase("add")) { //use /explodingPlayers add HoneyBerries
-
-                Player player = (Player) getOnlineOfflinePlayer(args[1]);
-                ExplodingPlayersSettings.getInstance().addPlayerToExplodingList(player);
-
-                sender.sendMessage("You added " + player.getName() + " to the exploding player list!");
-                return true;
-            }
-
-
-
-            else if (args[0].equalsIgnoreCase("remove")) { //use /explodingPlayers remove HoneyBerries
-
-                Player player = (Player) getOnlineOfflinePlayer(args[1]);
-                ExplodingPlayersSettings.getInstance().removePlayerFromExplodingList(player);
-
-                sender.sendMessage("You removed " + player.getName() + " from the exploding player list");
-                return true;
-            }
-
-            else {
-                return false;
-            }
-        }
-
-
-
-        else if (args.length == 1 && args[0].equalsIgnoreCase("list")) {  // use /explodingPlayers list
-            ArrayList<String> playerUsernames = new ArrayList<>();
-            ArrayList<String> playerUUIDs = ExplodingPlayersSettings.getInstance().getListOfExplodingPlayers();
-
-            for (String uuidString : playerUUIDs) {
-                try {
-                    UUID uuid = UUID.fromString(uuidString);
-
-                    // Check if the player is online
-                    Player onlinePlayer = Bukkit.getPlayer(uuid);
-                    if (onlinePlayer != null) {
-                        // Player is online, get their name
-                        playerUsernames.add(onlinePlayer.getName());
-                    } else {
-                        // Player is offline, use OfflinePlayer
-                        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-                        String username = offlinePlayer.getName();
-
-                        if (username != null) {
-                            playerUsernames.add(username);
-                        } else {
-                            Bukkit.getLogger().warning("Failed to retrieve name for UUID: " + uuidString);
-                        }
-                    }
-                } catch (IllegalArgumentException e) {
-                    Bukkit.getLogger().warning("Invalid UUID format in config: " + uuidString);
+            if (args[0].equalsIgnoreCase("add")) { // Add a player to the list
+                Player player = getOnlinePlayer(args[1]);
+                if (player == null) {
+                    sender.sendMessage("Player not found or is offline. Use a valid name or UUID.");
+                    return true;
                 }
+
+                ExplodingPlayersSettings.getInstance().addPlayerToExplodingList(player);
+                sender.sendMessage("Added " + player.getName() + " to the exploding players list.");
+                return true;
+            } else if (args[0].equalsIgnoreCase("remove")) { // Remove a player from the list
+                Player player = getOnlinePlayer(args[1]);
+                if (player == null) {
+                    sender.sendMessage("Player not found or is offline. Use a valid name or UUID.");
+                    return true;
+                }
+
+                ExplodingPlayersSettings.getInstance().removePlayerFromExplodingList(player);
+                sender.sendMessage("Removed " + player.getName() + " from the exploding players list.");
+                return true;
             }
+        } else if (args.length == 1) { // Commands without a player argument
+            if (args[0].equalsIgnoreCase("list")) { // List all exploding players
+                ArrayList<String> explodingPlayers = ExplodingPlayersSettings.getInstance().getListOfExplodingPlayers();
+                ArrayList<String> playerNames = new ArrayList<>();
 
+                for (String uuidString : explodingPlayers) {
+                    try {
+                        UUID uuid = UUID.fromString(uuidString);
+                        Player onlinePlayer = Bukkit.getPlayer(uuid);
+                        if (onlinePlayer != null) {
+                            playerNames.add(onlinePlayer.getName()); // Use name if online
+                        } else {
+                            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+                            if (offlinePlayer != null && offlinePlayer.getName() != null) {
+                                playerNames.add(offlinePlayer.getName()); // Use name if offline
+                            } else {
+                                Bukkit.getLogger().warning("Failed to find name for UUID: " + uuidString);
+                            }
+                        }
+                    } catch (IllegalArgumentException e) {
+                        Bukkit.getLogger().warning("Invalid UUID in configuration: " + uuidString);
+                    }
+                }
 
-            sender.sendMessage("Exploding Players: " + String.join(", ", playerUsernames));
-            return true;
+                if (playerNames.isEmpty()) {
+                    sender.sendMessage("No players are currently marked as exploding.");
+                } else {
+                    sender.sendMessage("Exploding Players: " + String.join(", ", playerNames));
+                }
+                return true;
+            } else if (args[0].equalsIgnoreCase("reload")) { // Reload the plugin configuration
+                ExplodingPlayersSettings.getInstance().load();
+                sender.sendMessage("Configuration successfully reloaded.");
+                return true;
+            }
         }
 
-
-        else { //bad command syntax
-            return false;
-        }
+        // If the command syntax is incorrect
+        sender.sendMessage("Invalid command. Usage: /explodingPlayers <add|remove|list|reload> [player]");
+        return false;
     }
-
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
-
-    if (args.length == 1) { //first argument can be: add|remove|list
-
-        return Arrays.asList("add", "remove", "list");
-
-    }
-
-    else if (args.length == 2) {
-
-            String partialPlayerName = args[1]; // What the user has typed so far
-            ArrayList<String> playerNames = new ArrayList<>();
-
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                if (player.getName().toLowerCase().startsWith(partialPlayerName.toLowerCase())) {
-                    playerNames.add(player.getName());
+        if (args.length == 1) { // First argument can be: add, remove, list, reload
+            return Arrays.asList("add", "remove", "list", "reload");
+        } else if (args.length == 2) { // Second argument: suggest online player names for add/remove
+            if (args[0].equalsIgnoreCase("add") || args[0].equalsIgnoreCase("remove")) {
+                String partialPlayerName = args[1];
+                List<String> matchingNames = new ArrayList<>();
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    if (player.getName().toLowerCase().startsWith(partialPlayerName.toLowerCase())) {
+                        matchingNames.add(player.getName());
+                    }
                 }
+                return matchingNames;
             }
-
-            return playerNames; // Return matching names
-
         }
 
-    else return new ArrayList<>();
+        return new ArrayList<>(); // No suggestions for other cases
     }
 }

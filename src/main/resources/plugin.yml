@@ -7,7 +7,7 @@ authors: [ HoneyBerries ]
 commands:
   explodingPlayers:
     description: "Allows you to modify the list of players who would explode!"
-    usage: "/explodingPlayers [add/remove/list] [player]"
+    usage: "/explodingPlayers [add/remove/list/reload] [player]"
     aliases: [ exp ]
     permission: explodingPlayers.command.edit
     permission-message: "You do not have the permission to view or edit the players that will explode!"

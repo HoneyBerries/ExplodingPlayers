@@ -26,13 +26,13 @@ public class EntityListener implements Listener {
                 if (player.hasPermission("explodingPlayers.explode.use")) {
 
                     //torture the hostage
-                    hostage.getWorld().createExplosion(hostage.getLocation(), 5F);
+                    hostage.getWorld().createExplosion(hostage.getLocation(), ExplodingPlayersSettings.getInstance().getExplosionPower());
 
                 }
 
                 else {
 
-                    player.sendMessage("You don't have the permission to torture people!");
+                    player.sendMessage("You don't have the permission to explode people!");
                 }
 
             }
