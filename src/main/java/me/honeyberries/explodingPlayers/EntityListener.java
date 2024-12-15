@@ -17,22 +17,19 @@ public class EntityListener implements Listener {
         Entity entity = event.getRightClicked();
         Player player = event.getPlayer();
 
-        if (entity instanceof Player) {
-            Player hostage = (Player) entity;
+
+        if (entity instanceof Player hostage) {
 
             //check if the hostage is in the death row
             if (ExplodingPlayersSettings.getInstance().getListOfExplodingPlayers().contains(hostage.getUniqueId().toString())) {
-
                 if (player.hasPermission("explodingPlayers.explode.use")) {
-
                     //torture the hostage
                     hostage.getWorld().createExplosion(hostage.getLocation(), ExplodingPlayersSettings.getInstance().getExplosionPower());
-
                 }
 
                 else {
 
-                    player.sendMessage("You don't have the permission to explode people!");
+                    player.sendMessage("You can't randomly make people explode!");
                 }
 
             }

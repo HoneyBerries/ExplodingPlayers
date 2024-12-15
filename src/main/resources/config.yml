@@ -1,2 +1,6 @@
+#the list of players who will explode when an admin or someone with the
+#necessary permission right-clicks on them
 exploding-players: []
+#changes the explosion power when someone explodes!
+#Must be a positive decimal or integer. Defaults to TNT power.
 explosion-power: 5.0
