@@ -9,10 +9,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+
+import java.util.*;
 
 public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
 
@@ -47,10 +45,18 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
                     return true;
                 }
 
-                ExplodingPlayersSettings.getInstance().addPlayerToExplodingList(player);
-                sender.sendMessage("Successfully added " + player.getName() + " to the exploding players list.");
-                Bukkit.getLogger().info("Successfully added " + player.getName());
-                return true;
+                //check if they're in the list or not
+                if (ExplodingPlayersSettings.getInstance().getListOfExplodingPlayers().contains(player.getUniqueId())) {
+                    sender.sendMessage(player.getName() + " is already in the list!");
+                    return true;
+
+                } else { //add them in
+                    ExplodingPlayersSettings.getInstance().addPlayerToExplodingList(player);
+                    sender.sendMessage("Successfully added " + player.getName() + " to the exploding players list.");
+                    Bukkit.getLogger().info("Added " + player.getName());
+                    return true;
+
+                }
 
             } else if (args[0].equalsIgnoreCase("remove")) { // Remove a player from the list
                 Player player = getOnlinePlayer(args[1]);
@@ -59,10 +65,19 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
                     return true;
                 }
 
-                ExplodingPlayersSettings.getInstance().removePlayerFromExplodingList(player);
-                sender.sendMessage("Successfully removed" + player.getName() + " from the exploding players list.");
-                Bukkit.getLogger().info("Successfully removed " + player.getName());
-                return true;
+                //check if they're in the list or not
+
+                if (ExplodingPlayersSettings.getInstance().getListOfExplodingPlayers().contains(player.getUniqueId())) {
+                    //remove them
+                    ExplodingPlayersSettings.getInstance().removePlayerFromExplodingList(player);
+                    sender.sendMessage("Successfully removed" + player.getName() + " from the exploding players list.");
+                    Bukkit.getLogger().info("Removed " + player.getName());
+                    return true;
+
+                } else {
+                    sender.sendMessage(player.getName() + " was never in the list");
+
+                }
 
             } else if (args[0].equalsIgnoreCase("power")) { //Set the explosion power
 
@@ -70,7 +85,7 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
                     float explosionForce = Float.parseFloat(args[1]);
                     if (explosionForce >= 0f) {
                         ExplodingPlayersSettings.getInstance().setExplosionPower(explosionForce);
-                        Bukkit.getLogger().info("Set explosion power to " + explosionForce);
+                        Bukkit.getLogger().info("Explosion power: " + explosionForce);
                         sender.sendMessage(ChatColor.GREEN + "Set the explosion power to " + explosionForce);
                     } else {
                         sender.sendMessage(ChatColor.RED + "You can't go negative!");
@@ -97,20 +112,30 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
                     try {
                         UUID uuid = UUID.fromString(uuidString);
                         Player onlinePlayer = Bukkit.getPlayer(uuid);
+
                         if (onlinePlayer != null) {// Player is online
                             playerNames.add(onlinePlayer.getName());
+
                         } else { //Player is offline
                             OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+
                             if (offlinePlayer != null && offlinePlayer.getName() != null) {
                                 playerNames.add(offlinePlayer.getName());
+
                             } else { //When everything fails
                                 Bukkit.getLogger().warning("Failed to find name for UUID: " + uuidString);
+
                             }
                         }
+
                     } catch (IllegalArgumentException e) {
                         Bukkit.getLogger().warning("Invalid UUID in configuration: " + uuidString);
                     }
                 }
+
+                //sort names alphabetically and remove duplicates so player happy
+                playerNames = new ArrayList<>(new LinkedHashSet<>(playerNames));
+                playerNames.sort(String::compareTo);
 
                 if (playerNames.isEmpty()) {
                     sender.sendMessage("No players are currently marked as exploding.");
@@ -133,7 +158,7 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (args.length == 1) { // First argument can be: add, remove, list, reload
+        if (args.length == 1) { // The First argument can be: add, remove, list, reload
             return Arrays.asList("add", "remove", "list", "power", "reload");
         } else if (args.length == 2) { // Second argument: suggest online player names for add/remove
             if (args[0].equalsIgnoreCase("add") || args[0].equalsIgnoreCase("remove")) {
@@ -147,6 +172,7 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
                 return matchingNames;
             }
         }
-        return new ArrayList<>(); // No suggestions for other cases
+
+        return List.of(); // No suggestions for other cases
     }
 }

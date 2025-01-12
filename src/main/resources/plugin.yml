@@ -1,5 +1,5 @@
 name: ExplodingPlayers
-version: '1.0.1'
+version: '1.0.0'
 main: me.honeyberries.explodingPlayers.ExplodingPlayers
 api-version: '1.13'
 authors: [ HoneyBerries ]

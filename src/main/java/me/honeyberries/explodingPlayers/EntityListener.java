@@ -31,7 +31,6 @@ public class EntityListener implements Listener {
 
                     player.sendMessage("You can't randomly make people explode!");
                 }
-
             }
 
         }

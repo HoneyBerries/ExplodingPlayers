@@ -6,12 +6,13 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.UUID;
 
 public class ExplodingPlayersSettings {
 
-    public static ExplodingPlayersSettings instance = new ExplodingPlayersSettings();
+    public static final ExplodingPlayersSettings instance = new ExplodingPlayersSettings();
     private File configFile;
     private YamlConfiguration yamlConfig;
     private ArrayList<String> listOfExplodingPlayers = new ArrayList<>();
@@ -45,7 +46,7 @@ public class ExplodingPlayersSettings {
 
         // Update the list of exploding players
         try {
-            this.listOfExplodingPlayers = new ArrayList<String>(yamlConfig.getStringList("exploding-players"));
+            this.listOfExplodingPlayers = new ArrayList<>(new LinkedHashSet<>(yamlConfig.getStringList("exploding-players")));
             Bukkit.getLogger().info("List of exploding UUID's" + listOfExplodingPlayers.toString());
 
         } catch (Exception e) {
@@ -93,6 +94,7 @@ public class ExplodingPlayersSettings {
             listOfExplodingPlayers.add(personUUID.toString());
         }
 
+        listOfExplodingPlayers = new ArrayList<>(new LinkedHashSet<>(listOfExplodingPlayers));
         ExplodingPlayersSettings.getInstance().set("exploding-players", listOfExplodingPlayers.stream().toList());
 
     }
@@ -104,6 +106,7 @@ public class ExplodingPlayersSettings {
         // Remove them if already in the list, else do nothing
         listOfExplodingPlayers.remove(person1UUID.toString());
 
+        listOfExplodingPlayers = new ArrayList<>(new LinkedHashSet<>(listOfExplodingPlayers));
         ExplodingPlayersSettings.getInstance().set("exploding-players", listOfExplodingPlayers.stream().toList());
     }
 
