@@ -15,7 +15,7 @@ import java.util.*;
 public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
 
     // Get online player by UUID or username
-    public Player getOnlinePlayer(@NotNull String identifier) {
+    public static Player getOnlinePlayer(@NotNull String identifier) {
         try {
             UUID uuid = UUID.fromString(identifier);
             return Bukkit.getPlayer(uuid); // Returns null if player is offline
@@ -25,7 +25,7 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
     }
 
     // Get offline player by UUID or username
-    public OfflinePlayer getOfflinePlayer(@NotNull String identifier) {
+    public static OfflinePlayer getOfflinePlayer(@NotNull String identifier) {
         try {
             UUID uuid = UUID.fromString(identifier);
             return Bukkit.getOfflinePlayer(uuid);
@@ -39,7 +39,7 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
         // Command with exactly 2 arguments
         if (args.length == 2) {
             if (args[0].equalsIgnoreCase("add")) { // Add a player to the list
-                Player player = getOnlinePlayer(args[1]);
+            Player player = ExplodingPlayersCommand.getOnlinePlayer(args[1]);
                 if (player == null) {
                     sender.sendMessage(ChatColor.RED + "Player not found or is offline. Enter a valid username!");
                     return true;
@@ -59,7 +59,7 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
                 }
 
             } else if (args[0].equalsIgnoreCase("remove")) { // Remove a player from the list
-                Player player = getOnlinePlayer(args[1]);
+                Player player = ExplodingPlayersCommand.getOnlinePlayer(args[1]);
                 if (player == null) {
                     sender.sendMessage(ChatColor.RED + "Player not found or is offline. Use a valid username!");
                     return true;
