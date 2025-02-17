@@ -9,7 +9,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.*;
 
 public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
@@ -41,7 +40,8 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
         } else if (args.length == 1) {
             handleSingleArgCommands(sender, args);
         } else {
-            sendInvalidSyntaxMessage(sender);
+            sender.sendMessage(ChatColor.RED + "Invalid command syntax!");
+            sender.sendMessage(ChatColor.GOLD + "Usage: /explodingPlayers <add|remove|list|power|reload> [player]");
         }
         return true;
     }
@@ -55,7 +55,7 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
                 if (sender.hasPermission("explodingPlayers.command.edit")) {
                     addPlayer(sender, target);
                 } else {
-                    sendNoPermissionMessage(sender);
+                    sender.sendMessage(ChatColor.RED + "You do not have the permissions to perform this action.");
                 }
                 break;
 
@@ -63,7 +63,7 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
                 if (sender.hasPermission("explodingPlayers.command.edit")) {
                     removePlayer(sender, target);
                 } else {
-                    sendNoPermissionMessage(sender);
+                    sender.sendMessage(ChatColor.RED + "You do not have the permissions to perform this action.");
                 }
                 break;
 
@@ -71,12 +71,13 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
                 if (sender.hasPermission("explodingPlayers.command.edit")) {
                     setExplosionPower(sender, target);
                 } else {
-                    sendNoPermissionMessage(sender);
+                    sender.sendMessage(ChatColor.RED + "You do not have the permissions to perform this action.");
                 }
                 break;
 
             default:
-                sendInvalidSyntaxMessage(sender);
+                sender.sendMessage(ChatColor.RED + "Invalid command syntax!");
+                sender.sendMessage(ChatColor.GOLD + "Usage: /explodingPlayers <add|remove|list|power|reload> [player]");
                 break;
         }
     }
@@ -89,20 +90,31 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
                 if (sender.hasPermission("explodingPlayers.command.view")) {
                     listExplodingPlayers(sender);
                 } else {
-                    sendNoPermissionMessage(sender);
+                    sender.sendMessage(ChatColor.RED + "You do not have the permissions to perform this action.");
                 }
                 break;
 
             case "reload":
                 if (sender.hasPermission("explodingPlayers.command.reload")) {
-                    reloadConfig(sender);
+                    ExplodingPlayersSettings.getInstance().load();
+                    sender.sendMessage(ChatColor.GREEN + "Configuration successfully reloaded.");
+
                 } else {
-                    sendNoPermissionMessage(sender);
+                    sender.sendMessage(ChatColor.RED + "You do not have the permissions to perform this action.");
+                }
+                break;
+
+            case "power":
+                if (sender.hasPermission("explodingPlayers.command.view")) {
+                    sender.sendMessage(ChatColor.GOLD + "Explosion Power: " + ChatColor.GREEN + ExplodingPlayersSettings.getInstance().getExplosionPower());
+                } else {
+                    sender.sendMessage(ChatColor.RED + "You do not have the permissions to perform this action.");
                 }
                 break;
 
             default:
-                sendInvalidSyntaxMessage(sender);
+                sender.sendMessage(ChatColor.RED + "Invalid command syntax!");
+                sender.sendMessage(ChatColor.GOLD + "Usage: /explodingPlayers <add|remove|list|power|reload> [player]");
                 break;
         }
     }
@@ -111,12 +123,12 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
         Player player = getOnlinePlayer(target);
         if (player == null) {
             sender.sendMessage(ChatColor.RED + "Player not found or is offline. Enter a valid username!");
-        } else if (ExplodingPlayersSettings.getInstance().getListOfExplodingPlayers().contains(player.getUniqueId())) {
+        } else if (ExplodingPlayersSettings.getInstance().getListOfExplodingPlayers().contains(player.getUniqueId().toString())) {
             sender.sendMessage(ChatColor.GREEN + player.getName() + ChatColor.GRAY + " is already in the list!");
         } else {
             ExplodingPlayersSettings.getInstance().addPlayerToExplodingList(player);
             sender.sendMessage(ChatColor.GRAY + "Successfully added " + ChatColor.GREEN + player.getName() + ChatColor.GRAY + " to the exploding players list.");
-            Bukkit.getLogger().info("Added " + player.getName());
+            ExplodingPlayers.getInstance().getLogger().info("Added " + player.getName());
         }
     }
 
@@ -125,17 +137,16 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
         if (player == null) {
             sender.sendMessage(ChatColor.RED + "Player not found or is offline. Use a valid username!");
         } else {
-            String uuidString = player.getUniqueId().toString();
-            if (ExplodingPlayersSettings.getInstance().getListOfExplodingPlayers().contains(uuidString)) {
+
+            if (ExplodingPlayersSettings.getInstance().getListOfExplodingPlayers().contains(player.getUniqueId().toString())) {
                 ExplodingPlayersSettings.getInstance().removePlayerFromExplodingList(player);
                 sender.sendMessage(ChatColor.GRAY + "Successfully removed " + ChatColor.GREEN + player.getName() + ChatColor.GRAY + " from the exploding players list.");
-                Bukkit.getLogger().info("Removed " + player.getName());
+                ExplodingPlayers.getInstance().getLogger().info("Removed " + player.getName());
             } else {
                 sender.sendMessage(ChatColor.GREEN + player.getName() + ChatColor.GRAY + " was never in the list");
             }
         }
     }
-
 
     private void setExplosionPower(CommandSender sender, String powerInput) {
         try {
@@ -143,7 +154,7 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
             if (explosionForce >= 0f) {
                 ExplodingPlayersSettings.getInstance().setExplosionPower(explosionForce);
                 sender.sendMessage(ChatColor.GRAY + "Set the explosion power to " + ChatColor.GREEN + explosionForce);
-                Bukkit.getLogger().info("Explosion power: " + explosionForce);
+                ExplodingPlayers.getInstance().getLogger().info("Explosion power: " + explosionForce);
             } else {
                 sender.sendMessage(ChatColor.RED + "You can't go negative!");
             }
@@ -163,15 +174,15 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
                 if (onlinePlayer != null) {
                     playerNames.add(onlinePlayer.getName());
                 } else {
-                    OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-                    if (offlinePlayer != null && offlinePlayer.getName() != null) {
+                    OfflinePlayer offlinePlayer = getOfflinePlayer(uuid.toString());
+                    if (offlinePlayer.getName() != null) {
                         playerNames.add(offlinePlayer.getName());
                     } else {
-                        Bukkit.getLogger().warning("Failed to find name for UUID: " + uuidString);
+                        ExplodingPlayers.getInstance().getLogger().warning("Failed to find name for UUID: " + uuidString);
                     }
                 }
             } catch (IllegalArgumentException e) {
-                Bukkit.getLogger().warning("Invalid UUID in configuration: " + uuidString);
+                ExplodingPlayers.getInstance().getLogger().warning("Invalid UUID in configuration: " + uuidString);
             }
         }
 
@@ -185,19 +196,8 @@ public class ExplodingPlayersCommand implements CommandExecutor, TabExecutor {
         }
     }
 
-    private void reloadConfig(CommandSender sender) {
-        ExplodingPlayersSettings.getInstance().load();
-        sender.sendMessage(ChatColor.GREEN + "Configuration successfully reloaded.");
-    }
 
-    private void sendInvalidSyntaxMessage(CommandSender sender) {
-        sender.sendMessage(ChatColor.RED + "Invalid command syntax!");
-        sender.sendMessage(ChatColor.GOLD + "Usage: /explodingPlayers <add|remove|list|power|reload> [player]");
-    }
 
-    private void sendNoPermissionMessage(CommandSender sender) {
-        sender.sendMessage(ChatColor.RED + "You do not have the permissions to perform this action.");
-    }
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {

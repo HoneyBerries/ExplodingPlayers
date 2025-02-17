@@ -41,17 +41,17 @@ public class ExplodingPlayersSettings {
             yamlConfig.load(configFile);
         } catch (Exception e) {
             e.printStackTrace();
-            Bukkit.getLogger().warning("Configuration File failed to be loaded ;(");
+            ExplodingPlayers.getInstance().getLogger().warning("Configuration File failed to be loaded ;(");
         }
 
         // Update the list of exploding players
         try {
             this.listOfExplodingPlayers = new ArrayList<>(new LinkedHashSet<>(yamlConfig.getStringList("exploding-players")));
-            Bukkit.getLogger().info("List of exploding UUID's" + listOfExplodingPlayers.toString());
+            ExplodingPlayers.getInstance().getLogger().info("List of exploding UUID's" + listOfExplodingPlayers.toString());
 
         } catch (Exception e) {
             e.printStackTrace();
-            Bukkit.getLogger().warning("Failed to get list of exploding players. Defaulting to no one!");
+            ExplodingPlayers.getInstance().getLogger().warning("Failed to get list of exploding players. Defaulting to no one!");
             this.listOfExplodingPlayers.clear();
         }
 
@@ -59,13 +59,13 @@ public class ExplodingPlayersSettings {
         // Update the explosionPower field
         try {
             this.explosionPower = (float) yamlConfig.getDouble("explosion-power");
-            Bukkit.getLogger().info("Explosion power is " + explosionPower);
+            ExplodingPlayers.getInstance().getLogger().info("Explosion power is " + explosionPower);
         } catch (Exception e) {
             e.printStackTrace();
-            Bukkit.getLogger().warning("Failed to load explosion power. Defaulting to 0!");
+            ExplodingPlayers.getInstance().getLogger().warning("Failed to load explosion power. Defaulting to 0!");
             this.explosionPower = 0f; // Default value
         }
-        Bukkit.getLogger().info("Successfully loaded the exploding players config!");
+        ExplodingPlayers.getInstance().getLogger().info("Successfully loaded the exploding players config!");
     }
 
     // Method to save data
@@ -74,7 +74,7 @@ public class ExplodingPlayersSettings {
             yamlConfig.save(configFile);
         } catch (Exception e) {
             e.printStackTrace();
-            Bukkit.getLogger().warning("Configuration File failed to be saved ;(");
+            ExplodingPlayers.getInstance().getLogger().warning("Configuration File failed to be saved ;(");
         }
     }
 
