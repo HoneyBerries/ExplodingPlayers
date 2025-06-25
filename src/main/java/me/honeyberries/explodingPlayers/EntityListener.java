@@ -24,7 +24,13 @@ public class EntityListener implements Listener {
             if (ExplodingPlayersSettings.getInstance().getListOfExplodingPlayers().contains(hostage.getUniqueId().toString())) {
                 if (player.hasPermission("explodingPlayers.explode.use")) {
                     //torture the hostage
-                    hostage.getWorld().createExplosion(hostage.getLocation(), ExplodingPlayersSettings.getInstance().getExplosionPower());
+                    ExplodingPlayers plugin = ExplodingPlayers.getInstance();
+                    hostage.getScheduler().execute(plugin, () -> {
+                        // We are now on the entity's region thread, get current location again if needed,
+                        // or use the location captured when the event fired if that's more appropriate.
+                        // For an immediate explosion, the captured event location for the explosion itself is fine.
+                        hostage.getWorld().createExplosion(hostage.getLocation(), ExplodingPlayersSettings.getInstance().getExplosionPower());
+                    }, null, 0L);
                 }
 
                 else {
